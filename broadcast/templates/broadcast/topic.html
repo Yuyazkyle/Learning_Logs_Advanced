@@ -1,0 +1,24 @@
+{%extends 'broadcast/base.html'%}
+{%block content%}
+<p><a href="{%url 'broadcast:topics'%}">Back</a></p>
+    <h3>Broadcast Topic:<a href="{%url 'broadcast:edit_topic' topic.id%}"> {{topic}} </a></h3>
+    
+    <p style="color:red">############################</p>
+    <p style="color:red">Note that this function can't be undone yet</p>
+    <button class="delete-all"> <a href="{%url 'broadcast:flush_entries' topic.id%}">Flush all Entry</a></button>
+    <p style="color:red">############################</p>
+    
+    <p><a href="{%url 'broadcast:add_entry' topic.id%}">New Announcement</a></p>
+    <p><b>Announcements !!!</b></p>
+    <ul>
+        {%for entry in entrys%}
+            <li>
+                {{entry.date_added|date:'M d, Y H:i A' }}
+                {{entry.text | linebreaks}}
+                <p><a href="{%url 'broadcast:edit_entry' entry.id%}">Edit Entry</a></p>
+            </li>
+        {%empty%}
+            No Announcements yet under this topic
+        {%endfor%}
+    </ul>
+{%endblock content%}

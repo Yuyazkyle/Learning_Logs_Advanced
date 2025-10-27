@@ -1,0 +1,12 @@
+{%extends 'learning_logs/base.html'%}
+{%block content%}
+<p><a href="{%url 'learning_logs:index'%}">Back</a></p>
+<h3>Are you sure you want to log out ?, click "Logout" to proceed or click 
+    back
+</h3>
+<form action="{% url 'users:logout' %}" method="post">
+    {%csrf_token%}
+    <button type="submit">Logout</button>
+    <input type="hidden" name="next" value="{% url 'learning_logs:index' %}">
+</form>
+{%endblock content%} 

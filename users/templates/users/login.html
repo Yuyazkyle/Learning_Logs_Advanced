@@ -1,0 +1,29 @@
+{% extends 'users/base.html' %}
+{% block title %}Login{% endblock %}
+{% load static %}
+
+{% block content %}
+
+<h1>Login</h1>
+<div class="auth-form">
+    <!-- The form content overlays the image -->
+    <div class="form-content">
+        <form action="{% url 'learning_logs:login' %}" method="POST">
+            <span class="material-symbols-outlined">person</span> <br>
+            <input type="text" name="username" placeholder="Username" required>
+        <br>
+            <span class="material-symbols-outlined">key</span> <br>
+            <div class="input-wrapper">
+                <input type="password" id="password" placeholder="Password" required>
+                <i class="fa-solid fa-eye toggle-password" id="toggleIcon"></i>
+            </div>
+        <br>
+            <p>Forgot password?</p>
+            {% csrf_token %}
+        <br>
+            <input type="submit" value="Login">
+        </form>
+    </div>
+</div>
+
+{% endblock %}

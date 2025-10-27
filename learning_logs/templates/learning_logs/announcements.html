@@ -1,0 +1,15 @@
+{%extends 'learning_logs/base.html'%}
+{%block content%}
+<p><a href="{%url 'learning_logs:topics'%}">Back</a></p>
+<p><b>Announcements !!!</b></p>
+<ul>
+    {%for entry in entrys%}
+        <li>
+            {{entry.date_added|date:'M d, Y H:i A' }}
+            {{entry.text | linebreaks}}
+        </li>
+    {%empty%}
+        No Announcements yet for this topic
+    {%endfor%}
+</ul>
+{%endblock content%}

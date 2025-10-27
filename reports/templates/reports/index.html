@@ -1,0 +1,5 @@
+{%extends 'learning_logs/base.html'%}
+  {%block content%}
+    <p>Statistical reports for the day {date}</p>
+    <a href="{%url 'reports:dice_roll_result'%}">here</a>
+   {%endblock content%}

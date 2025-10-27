@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        {%load static%}
+        <meta charset="en">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link rel="stylesheet" type="text/css" href="{%static 'base.css'%}">
+        <title>Broadcast page</title>
+    </head>
+<body>
+    <p>
+        <a href="{%url 'learning_logs:index'%}">Learning_logs</a> -
+        <a href="{%url 'broadcast:index'%}">Broadcast page</a> -
+        <a href="{%url 'broadcast:topics'%}">Broadcast Topics</a> -
+        
+    </p>
+    {%block content%}{%endblock content%}
+</body>
+</html>

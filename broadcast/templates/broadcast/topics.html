@@ -1,0 +1,17 @@
+{%extends 'broadcast/base.html'%}
+    {%block content%}
+    <p><a href="{%url 'broadcast:add_topic'%}">
+        New Broadcast Topic</a></p>
+        <p><b>Here are the list of Topics 
+            you have broadcasted so far
+        </b></p>
+        <ol>
+        {%for topic in topics%}
+            <li><a href="{%url 'broadcast:topic' topic.id%}">{{topic}}</a></li>
+        {%empty%}
+            <ul>
+                <li>You have made no topic broadcasts yet</li>
+            </ul>
+        {%endfor%}
+        </ol>
+    {%endblock content%}

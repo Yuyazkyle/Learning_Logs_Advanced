@@ -1,0 +1,51 @@
+{% extends 'learning_logs/base.html' %}
+{% comment %} Merely just the landing page {% endcomment %}
+{% load static %}
+
+{% block extra_css %}
+    <link rel="stylesheet" type="text/css" href="{% static 'learning_logs/css/index.css' %}">
+{% endblock %}
+
+{% block title %}Learning Logs{% endblock %}
+
+{% block content %}
+    <header class="landing-banner">
+        <p class="landing-text">Learning</p><p class="landing-text lt2">Logs</p>
+        <p class="landing-desc">Best place to jote down your daily learning progress.</p>
+        <div class="button-container">
+            <button data-url="{% url 'learning_logs:login' %}" onclick="redirectToUrl(this, 'remain')" id="login-btn">Login</button>
+            <button data-url="{% url 'learning_logs:signup' %}" onclick="redirectToUrl(this, 'remain')" id="signup-btn"> Sign UP </button>
+        </div>
+        <img src="{%static 'learning_logs/images/note-guy.png'%}" id="img-note-guy">
+    </header>
+
+<main>
+    <div class="landing-card">
+        <div class="l-pic">
+            <img src="{%static 'learning_logs/images/l-pic1.png'%}">
+        </div>
+        <div class="l-text">
+            <p>✍️ Turn every lesson into a story worth remembering — write your learning experience.</p>
+        </div>
+    </div>
+
+    <div class="landing-card">
+        <div class="l-pic">
+            <img src="{%static 'learning_logs/images/l-pic2.png'%}" id="l-pic2">
+        </div>
+        <div class="l-text" id="l-text2">
+            <p>🌍 Where knowledge meets reflection — record, grow, and own your learning journey.</p>
+        </div>
+    </div>
+
+    <div class="landing-card">
+        <div class="l-pic">
+            <img src="{%static 'learning_logs/images/l-pic3.png'%}">
+        </div>
+        <div class="l-text">
+            <p>🔓 Don’t just learn — capture it, shape it, and make it yours forever.</p>
+        </div>
+    </div>
+</main>
+{% endblock %}
+

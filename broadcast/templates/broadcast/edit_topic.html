@@ -1,0 +1,12 @@
+{%extends 'broadcast/base.html'%}
+{%block content%}
+<p><a href="{%url 'broadcast:topic' topic.id%}">Back</a></p>
+    <form action="{%url 'broadcast:edit_topic' topic.id%}" method="post">
+        {%csrf_token%}
+        {{form.as_p}}
+        <button name="submit">Edit</button>
+    </form>
+
+    <p style="color: red;">Delete this Broadcast Topic</p>
+    <button name="submit"><a href="{%url 'broadcast:delete_topic' topic.id%}">Delete</a></button>
+{%endblock content%}
