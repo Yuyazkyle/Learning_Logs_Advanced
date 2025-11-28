@@ -6,11 +6,6 @@
 {% block content %}
   {% include "learning_logs/includes/navbar.html"%}
 
-  <div class="greet-card">
-      <p id="back"></p>
-      <h1 id="reformer">Welcome back, {{ user.username }}</h1>
-  </div>
-
   <div class="container">
       <div class="topics-container">
           <table id="table-data">
@@ -33,31 +28,17 @@
 
 {% block extra_js %}
 <script>
-    function showPopup(message) {
-        return new Promise(resolve => {
-            const modal = document.getElementById("popup");
-            const text = document.getElementById("popup-text");
-            const input = document.getElementById("popup-input");
-            const ok = document.getElementById("popup-ok");
-
-            text.textContent = message;
-            modal.style.display = "flex";
-            input.value = "";
-            input.focus();
-
-            ok.onclick = () => {
-            modal.style.display = "none";
-            resolve(input.value);
-            };
-        });
-    };
-
     async function main() {
         const add_topic = document.getElementById("add-topic");
         await create_table_data();
 
         //(Popup)
-        add_topic.addEventListener('click', () => showPopup("Topic:").then(value => console.log("User entered:", value)))
+        add_topic.addEventListener('click', () => {
+            async function addTopic (title) {
+                sendToServer({endpoint: topic_api, pk: '', method: 'post', data: upload_update_template({msg: title, method: 'post', key: 'topic'})}).then(await create_table_data());
+            };
+            showPopup("Topic:").then(value => addTopic(value));
+        });
     };
 
     // wait till the DOM Content is fully loaded

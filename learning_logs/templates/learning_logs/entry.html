@@ -1,26 +1,24 @@
 {% extends 'learning_logs/base.html' %}
 {% block content %}
   {% include 'learning_logs/includes/navbar.html' %}
-  <h3 id="topic-header"></h3>
-  <p id="entry-card"></p>
+  <div id="topic-header"></div>
+  <div id="entry-card"></div>
 
 {% endblock content %}
 {% block extra_js %}
 <script>
   async function main() {
     const entry_pk = get_pk_fromurlend();
-    const topic_pk = await getApiObjectData({ endpoint: '/api/entry/', pk: entry_pk, key: 'topic' });
+    const topic_pk = await getApiObjectData({ endpoint: entry_api, pk: entry_pk, key: 'topic' });
     const topic_header = document.getElementById("topic-header");
     const entry_body = document.getElementById("entry-card");
     const pageTeller = document.getElementById('page-teller');
     const TopicspanEl = document.createElement('span');
     const EntryspanEl = document.createElement('span');
-    const topic_api = '/api/topics/';
-    const entry_api = '/api/entry/';
-    const interval_tocopy = 5 * 1000; // 5 secs
+    const interval_tocopy = 1; // ms
     const interval_tosend = 15 * 1000; // 15 secs
 
-    fillContent({
+    await fillContent({
       entry_endpoint: entry_api,
       entry_pk: entry_pk, 
       topic_endpoint: topic_api, 
@@ -32,10 +30,13 @@
       pageTeller: pageTeller
     });
 
+    // Try resending topic & entry again incase of error
+    await RetrySendServer({ endpoint: topic_api, method: 'PUT', key: 'topic', pk: topic_pk, elem: topic_header });
+    await RetrySendServer({ endpoint: entry_api, method: 'PUT', key: 'entry', pk: entry_pk, elem: entry_body });
+
     topic_header.addEventListener('dblclick', () => {
       changeTagName(topic_header, 'textarea');
       const new_topic_header = document.getElementById("topic-header"); // to capture it as textarea
-      RetrySendServer({ endpoint: topic_api, method: 'PUT', key: 'topic', pk: topic_pk }); // incase of inconsistencies
       // ...setInterval... to start saving data from here to the localstorage
       const inID_copy = setInterval(() => CopyToLocalStorage(new_topic_header, 'topic'), interval_tocopy);
       // ...setInterval... to start sending data from the localstorage to the server
@@ -44,7 +45,6 @@
 
     entry_body.addEventListener('dblclick', () => {
       changeTagName(entry_body, 'textarea');
-      RetrySendServer({ endpoint: entry_api, method: 'PUT', key: 'entry', pk: entry_pk }); // incase of inconsistencies
       const new_entry_body = document.getElementById("entry-card"); // to capture it as textarea
       // ...setInterval... to start saving data from here to the localstorage
       const inID_copy = setInterval(() => CopyToLocalStorage(new_entry_body, 'entry'), interval_tocopy);

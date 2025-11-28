@@ -9,6 +9,7 @@
           </table>
       </div>
   </div>
+  <div class="add-icon" id="new-entry">new</div>
     {% endblock content %}
 {% block extra_js %}
 <script>
@@ -24,8 +25,14 @@
         // popup that shows your topics or entries then you can just click from there
         spanEl.textContent = ' > ' + topic;
         pageTeller.appendChild(spanEl);
-        create_table_data({ endpoint: `/api/topics/${pk}/entries/`, excludeKeys: ['id', 'date_added', 'date_modified', 'topic'], redirect_to: `${window.origin}/entry/` });
-    }
+        await create_table_data({ endpoint: `${topic_api}${pk}/entries/`, excludeKeys: ['id', 'date_added', 'date_modified', 'topic'], redirect_to: `${window.origin}/entry/` });
+        
+        document.getElementById('new-entry').addEventListener('click', async function () {
+            await sendToServer({endpoint: entry_api, pk: '', method: 'post', data: await upload_update_template({msg: '', method: 'post', key: 'entry', topic_id: pk})}
+                ).then(response => response.json()
+                ).then(data => location.replace('/entry/' + data.id));
+        });
+    };
     // wait DOM Content is loaded
     document.addEventListener('DOMContentLoaded', main);
 </script>

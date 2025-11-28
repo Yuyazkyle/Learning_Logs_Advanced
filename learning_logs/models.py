@@ -16,7 +16,7 @@ class Topic(models.Model):
 class Entry(models.Model):
     id = models.UUIDField(primary_key=True, editable=False, default=uuid4, unique=True)
     topic = models.ForeignKey(Topic, on_delete=models.CASCADE, related_name='entries')
-    text = models.CharField(max_length=10000000)
+    text = models.CharField(max_length=10000000, blank=True)
     date_added = models.DateTimeField(auto_now_add=True)
     date_modified = models.DateTimeField(auto_now=True)
 

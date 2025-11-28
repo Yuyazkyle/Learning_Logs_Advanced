@@ -36,7 +36,6 @@ ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', '').split(',')
 # CSRF Trusted Origins that django should accept POST requests from
 CSRF_TRUSTED_ORIGINS = os.environ.get('CSRF_TRUSTED_ORIGINS', '').split(',')
 
-
 # Application definition
 
 INSTALLED_APPS = [

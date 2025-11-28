@@ -1,4 +1,6 @@
 let origin = window.location.origin
+const topic_api = '/api/topics/';
+const entry_api = '/api/entry/';
 
 async function showNotification(message, type = 'error', duration = 3000) {
   const popup = document.getElementById('notification-popup');
@@ -46,17 +48,22 @@ function get_pk_fromurlend() {
 async function create_table_data({
   retries = 3,
   baseDelay = 1000,
-  endpoint = '/api/topics/',
+  endpoint = topic_api,
   t_id = 'table-data',
   excludeKeys = ['id', 'date_added', 'date_modified'],
   sortKey = 'date_modified',
   sortOrder = 'new-old',
   main = 'title', // The main content of the Object returned (dict)
-  r_key = 'id', // redirect dict key value (pk for API OBJ ref)
+  r_key = 'id', // redirect dict key value (ie. pk for API OBJ ref)
   redirect_to = `${window.origin}/topic/`, // redirect to an entry endpoint, also appending the id of that topic
-
+  hide_tableHead = true,
+  include_checkbox = true, // checkbox value will be the OBJ pk
+  hide_checkbox = true,
+  menu_id = 'contextMenu',
 } = {}) {
   const url = (typeof origin !== 'undefined' ? origin : window.location.origin) + endpoint;
+  const menu = document.getElementById(menu_id);
+  let pressTimer = null;
 
   for (let attempt = 1; attempt <= retries; attempt++) {
     try {
@@ -104,6 +111,7 @@ async function create_table_data({
       for (const key in firstItem) {
         if (excludeKeys.includes(key)) continue;
         const th = document.createElement("th");
+        th.hidden = hide_tableHead; // hide this table header or not
         th.textContent = key.charAt(0).toUpperCase() + key.slice(1);
         header.appendChild(th);
       }
@@ -112,6 +120,15 @@ async function create_table_data({
       // --- Table body ---
       data.forEach(item => {
       const tr = document.createElement("tr");
+      if (include_checkbox) {
+        const checkboxd = document.createElement("td");
+        const checkbox = document.createElement("input");
+        checkbox.type = 'checkbox';
+        checkbox.value = item[r_key];
+        checkbox.hidden = hide_checkbox;
+        checkboxd.append(checkbox);
+        tr.appendChild(checkboxd);
+      }
       for (const key in item) {
         if (excludeKeys.includes(key)) continue;
         const td = document.createElement("td");
@@ -126,6 +143,42 @@ async function create_table_data({
         td.onclick = () => redirectToUrl(td, target='remain');
       }
         tr.appendChild(td);
+
+        
+
+      // ---------- DESKTOP RIGHT CLICK ----------
+      tr.addEventListener("contextmenu", (e) => {
+        e.preventDefault();
+        showMenu(e.pageX, e.pageY);
+      });
+
+    // ---------- MOBILE LONG PRESS ----------
+    tr.addEventListener("touchstart", (e) => {
+      // use the first finger position
+      const touch = e.touches[0];
+      pressTimer = setTimeout(() => {
+        showMenu(touch.pageX, touch.pageY);
+      }, 500); // long press = 500ms (adjust as needed)
+    });
+
+    tr.addEventListener("touchend", () => clearTimeout(pressTimer));
+    tr.addEventListener("touchmove", () => clearTimeout(pressTimer));
+    tr.addEventListener("touchcancel", () => clearTimeout(pressTimer));
+
+    // ---------- SHOW THE MENU ----------
+    function showMenu(x, y) {
+      menu.style.left = x + "px";
+      menu.style.top = y + "px";
+      menu.style.display = "block";
+    }
+
+    // ---------- HIDE MENU WHEN CLICKING ANYWHERE ELSE ----------
+    document.addEventListener("click", (e) => {
+      if (!menu.contains(e.target)) {
+        menu.style.display = "none";
+      }
+    });
+
       }
 
       table.appendChild(tr);
@@ -182,7 +235,7 @@ function changeTagName(el, newTag) {
   return newEl; // return the new element if you need it
 };
 
-async function getApiObjectData({endpoint='/api/topics/', pk, key} = {}) {
+async function getApiObjectData({endpoint=topic_api, pk, key} = {}) {
   // fetch the data and return the key's value
   try {
     const Response = await fetch(endpoint + pk);
@@ -222,7 +275,7 @@ async function fillContent({
       pageTeller.appendChild(navT_el);
       pageTeller.appendChild(navE_el);
     };
-    if (t_el !== undefined) t_el.textContent = title; else return title;
+    if (t_el !== undefined) t_el.textContent = title; else return title; // fill the topic-header
   } catch (error) {
     console.error(error);
   }
@@ -258,11 +311,14 @@ function RetrieveFromLocalStorage(key) {
 };
 
 
-async function upload_update_template({key, method, pk, topic_id } = {}) {
-  /** A template for upload or update for topic or entry*/
+async function upload_update_template({key, method, pk, topic_id, msg } = {}) {
+  /** A template for upload or update for topic or entry, it's meant to return a
+   * consistent data dictionary
+  */
   // if it's key is entry, then topic_id has to be passed
   key = key.trim().toLowerCase(); method = method.trim().toUpperCase();
-  const msg = RetrieveFromLocalStorage(key);
+  /* Check if a message was already passed, ease attempt to retrieve from localstorage */
+  msg =  msg !== undefined ? msg: RetrieveFromLocalStorage(key);
   let data = '';
 
   if (key === 'topic') {
@@ -271,7 +327,7 @@ async function upload_update_template({key, method, pk, topic_id } = {}) {
       else throw new Error(`Unsupported method ${method}`);
 
   } else if (key === 'entry') {
-    topic_id = topic_id !== undefined ? topic_id : await getApiObjectData({ endpoint: '/api/entry/', pk: pk, key: 'topic' })
+    topic_id = topic_id !== undefined ? topic_id : await getApiObjectData({ endpoint: entry_api, pk: pk, key: 'topic' })
     if (method === 'POST') {data = {topic: topic_id, text: msg}}
      else if (method === 'PUT') {data = {topic: topic_id, id: pk, text: msg}}
       else throw new Error(`Unsupported method ${method}`);
@@ -285,13 +341,17 @@ async function upload_update_template({key, method, pk, topic_id } = {}) {
 
 async function sendToServer({endpoint, pk, method, data} = {}) {
   method = method.toUpperCase().trim();
+  /* Incase pk was not passed, it wiuld still go well */
+  endpoint = endpoint.endsWith('/') ? endpoint : endpoint + '/';
+  let url = endpoint + pk;
+  url = url.endsWith('/') ? url : url + '/';
   const csrfToken = getCookie('csrftoken');
   let response = null;
 
   try {
     if (['POST', 'PUT'].includes(method)) {
       if (data !== undefined) {
-        response = await fetch(endpoint + pk + '/', {
+        response = await fetch(url, {
           method: method,
           headers: {
             'Content-Type': 'application/json',
@@ -301,7 +361,7 @@ async function sendToServer({endpoint, pk, method, data} = {}) {
         })
       } else throw new Error('Data cannot be undefined, if using HTTP method: ' + method);
   } else if (method === 'DELETE') {
-      response = await fetch(endpoint + pk + '/', {
+      response = await fetch(url, {
         method: method,
         headers: {
             'X-CSRFToken': csrfToken,
@@ -317,7 +377,7 @@ async function sendToServer({endpoint, pk, method, data} = {}) {
       method === 'DELETE' ? 'Deleted successfully' :
       'Done'
     );
-    return true;
+    return response;
     
     };
   } catch (err) {
@@ -334,19 +394,41 @@ async function SendReqToServer({ endpoint, pk, method, key, topic_id }){
   pk = pk !== undefined ? pk : get_pk_fromurlend();
   const data = await upload_update_template({ key: key, method: method, pk: pk, topic_id: topic_id });
   // ...sending process...
-  let done = await sendToServer({ endpoint: endpoint, pk: pk, method: method, data: data });
-  if (done) {localStorage.removeItem(key); console.log('deleted ' + key)};
+  let response = await sendToServer({ endpoint: endpoint, pk: pk, method: method, data: data });
+  if (response) {localStorage.removeItem(key); console.log('deleted ' + key)};
 };
 
 
-async function RetrySendServer({endpoint, method, key, pk} = {}) {
-  // Incase of system failure or net failure, check storage if data exists and forward to the server
+async function RetrySendServer({endpoint, method, key, pk, elem} = {}) {
+  // Incase of system failure or net failure, check storage if data exists and forward to the server, then change
+  // the content on the topic-header or entry-card
   console.log('Checking for past data...')
   console.log(key);
-  if (localStorage.getItem(key) !== null ? true : false) {
+  let data = localStorage.getItem(key);
+  if (data !== null ? true : false) {
     console.log(`found ${key} item in storage.\nSending to server now...`)
+    elem.textContent = data; console.log(elem.textContent);
     await SendReqToServer({ endpoint: endpoint, method: method, key: key, pk: pk})
   } else console.log('Nothing in storage, safe to proceed.');
 };
 
 
+function showPopup(message) {
+  /* For sending popup dialog for either input or delete confirmation or logout */
+  return new Promise(resolve => {
+    const modal = document.getElementById("popup");
+    const text = document.getElementById("popup-text");
+    const input = document.getElementById("popup-input");
+    const ok = document.getElementById("popup-ok");
+
+    text.textContent = message;
+    modal.style.display = "flex";
+    input.value = "";
+    input.focus();
+
+    ok.onclick = () => {
+    modal.style.display = "none";
+    resolve(input.value);
+    };
+  });
+};
